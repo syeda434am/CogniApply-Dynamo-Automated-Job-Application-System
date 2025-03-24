@@ -1,0 +1,25 @@
+# Ignore all files inside the users directory but keep the folder
+users/*
+!users/.gitkeep
+
+# Ignore Python cache files
+__pycache__/
+**/__pycache__/
+
+# Ignore virtual environment
+venv/
+
+# Ignore log files
+*.log
+
+# Ignore environment files
+.env
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore dependency lock files (optional)
+Pipfile.lock
+poetry.lock

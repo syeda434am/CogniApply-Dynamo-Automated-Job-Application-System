@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+selenium
+undetected-chromedriver
+websockets
+python-dateutil
+bcrypt
+webdriver-manager
+pdfplumber
+openai
+python-dotenv

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobBot - Automated Job Application System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Auth Pages -->
+        <div id="auth-pages">
+            <!-- Login Form -->
+            <div id="login-page" class="auth-form">
+                <div class="form-container">
+                    <div class="logo">
+                        <i class="fas fa-robot"></i>
+                        <h1>JobBot</h1>
+                    </div>
+                    <h2>Sign in to your account</h2>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="login-username">Username</label>
+                            <input type="text" id="login-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Sign In</button>
+                    </form>
+                    <p class="auth-switch">
+                        Don't have an account? 
+                        <a href="#" onclick="showPage('register-page')">Register</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-page" class="auth-form hidden">
+                <div class="form-container">
+                    <div class="logo">
+                        <i class="fas fa-robot"></i>
+                        <h1>JobBot</h1>
+                    </div>
+                    <h2>Create your account</h2>
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label for="register-username">Username</label>
+                            <input type="text" id="register-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-confirm-password">Confirm Password</label>
+                            <input type="password" id="register-confirm-password" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Create Account</button>
+                    </form>
+                    <p class="auth-switch">
+                        Already have an account? 
+                        <a href="#" onclick="showPage('login-page')">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span>JobBot</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#" onclick="showDashboardSection('profile')" class="active">Profile</a>
+                    <a href="#" onclick="showDashboardSection('job-search')">Job Search</a>
+                    <button onclick="logout()" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Profile Section -->
+            <div id="profile-section" class="dashboard-section">
+                <div class="profile-container">
+                    <h2>Profile Setup</h2>
+                    <form id="profile-form">
+                        <div class="form-section">
+                            <h3>Personal Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="full-name">Full Name</label>
+                                    <input type="text" id="full-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="tel" id="phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dob">Date of Birth</label>
+                                    <input type="date" id="dob" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="linkedin-url">LinkedIn Profile URL</label>
+                                    <input type="url" id="linkedin-url">
+                                </div>
+                                <div class="form-group">
+                                    <label for="github-url">GitHub Profile URL</label>
+                                    <input type="url" id="github-url">
+                                </div>
+                                <div class="form-group">
+                                    <label for="portfolio-url" class="optional">Portfolio URL</label>
+                                    <input type="url" id="portfolio-url">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Professional Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="job-title-preference">Preferred Job Title</label>
+                                    <input type="text" id="job-title-preference" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="experience-years">Years of Experience</label>
+                                    <input type="number" id="experience-years" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="salary-range">Expected Salary Range</label>
+                                    <input type="text" id="salary-range" placeholder="e.g., 80000-100000" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="skills">Skills (comma-separated)</label>
+                                <textarea id="skills" rows="3" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Documents</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="resume">Resume (PDF)</label>
+                                    <input type="file" id="resume" accept=".pdf" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cover-letter" class="optional">Cover Letter (PDF)</label>
+                                    <input type="file" id="cover-letter" accept=".pdf">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Platform Integration</h3>
+                            <div class="platform-buttons">
+                                <button type="button" class="btn-platform linkedin">
+                                    <i class="fab fa-linkedin"></i> 
+                                    Connect LinkedIn
+                                  </button>
+                                <button type="button" class="btn-platform indeed" onclick="connectIndeed()">
+                                    <i class="fas fa-briefcase"></i>
+                                    Connect Indeed
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Save Profile</button>
+                    </form>
+                    <div class="document-previews">
+                        <div id="resume-preview"></div>
+                        <div id="cover-letter-preview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Search Section -->
+            <div id="job-search-section" class="dashboard-section hidden">
+                <div class="search-container">
+                    <h2>Find Your Next Opportunity</h2>
+                    <form id="job-search-form">
+                        <div class="search-inputs">
+                            <div class="form-group">
+                                <label for="job-title">Job Title</label>
+                                <input type="text" id="job-title" placeholder="e.g., ML Engineer">
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location</label>
+                                <input type="text" id="location" placeholder="e.g., New York">
+                            </div>
+                            <div class="form-group">
+                                <label for="platform">Platform</label>
+                                <select id="platform" required>
+                                    <option value="">Select Platform</option>
+                                    <option value="linkedin">LinkedIn</option>
+                                    <option value="indeed">Indeed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-search"></i>
+                            Search Jobs
+                        </button>
+                    </form>
+                </div>
+                <div id="search-results" class="results-container hidden">
+                    <div class="results-header">
+                        <h3>Search Results</h3>
+                    </div>
+                    <div id="jobs-list" class="jobs-grid">
+                        <!-- Jobs will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Completion Popup -->
+    <div id="profile-completion-popup" class="popup hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Complete Your Profile</h3>
+                <button class="popup-close" onclick="closePopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="popup-body">
+                <p>Please complete your profile and connect to at least one job platform before accessing the job search feature.</p>
+                <div class="requirements-list">
+                    <div class="requirement">
+                        <i class="fas fa-user"></i>
+                        <span>Fill in all required profile information</span>
+                    </div>
+                    <div class="requirement">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Upload your resume</span>
+                    </div>
+                    <div class="requirement">
+                        <i class="fas fa-link"></i>
+                        <span>Connect to LinkedIn or Indeed</span>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <button class="btn-primary" onclick="goToProfile()">Complete Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- In index.html, modify this script block -->
+    <script>
+        // Do not redeclare currentUser here
+        function getAuthHeader() {
+          return 'Basic ' + btoa(currentUser.email + ":" + currentUser.password);
+        }
+    </script>
+    <script src="js/auth.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
