@@ -1,3 +1,69 @@
+window.showDashboardSection = showDashboardSection;
+window.isProfileComplete = isProfileComplete;
+window.showProfileCompletionPopup = showProfileCompletionPopup;
+window.closePopup = closePopup;
+window.goToProfile = goToProfile;
+window.deleteFile = deleteFile;
+
+// Dashboard section management
+function showDashboardSection(sectionId) {
+  // Save the current section
+  localStorage.setItem('lastSection', sectionId);
+
+  if (sectionId === 'job-search' && !isProfileComplete()) {
+      showProfileCompletionPopup();
+      return;
+  }
+
+  document.querySelectorAll('.nav-links a').forEach(link => {
+      link.classList.remove('active');
+  });
+  document.querySelector(`[onclick="showDashboardSection('${sectionId}')"]`).classList.add('active');
+
+  document.querySelectorAll('.dashboard-section').forEach(section => {
+      section.classList.add('hidden');
+  });
+  document.getElementById(`${sectionId}-section`).classList.remove('hidden');
+}
+
+function isProfileComplete() {
+  // Check if we have profile data in the window object
+  if (window.fetchedProfileData) {
+      const pd = window.fetchedProfileData;
+      const hasRequiredFields = pd.full_name && 
+                              pd.phone && 
+                              pd.job_title_preference && 
+                              pd.experience_years && 
+                              pd.skills;
+      
+      // Check for resume (either in preview or file input)
+      const hasResume = pd.resume_url || document.getElementById('resume').files.length > 0;
+      
+      // Check for LinkedIn connection
+      const hasLinkedIn = pd.linkedin_email && pd.linkedin_password;
+      
+      return hasRequiredFields && hasResume && hasLinkedIn;
+  }
+  return false;
+}
+
+function showProfileCompletionPopup() {
+  const popup = document.getElementById('profile-completion-popup');
+  popup.classList.remove('hidden');
+  popup.classList.add('show');
+}
+
+function closePopup() {
+  const popup = document.getElementById('profile-completion-popup');
+  popup.classList.remove('show');
+  setTimeout(() => popup.classList.add('hidden'), 300);
+}
+
+function goToProfile() {
+  closePopup();
+  showDashboardSection('profile');
+}
+
 let websocket = null;
 
 // In dashboard.js
@@ -25,41 +91,7 @@ function connectWebSocket(username) {
             updateProgressBar(data.message);
             break;
           case 'complete':
-            console.log('Received complete message:', data);
-            // Hide loading indicators
-            const loadingBar = document.querySelector('.loading-bar');
-            if (loadingBar) {
-              loadingBar.style.display = 'none';
-            }
-            
-            // Get the jobs list container and clear its content
-            const jobsListEl = document.getElementById('jobs-list');
-            jobsListEl.innerHTML = '';
-            
-            // Check if there are any jobs found
-            if (data.results && data.results.jobs && data.results.jobs.length > 0) {
-              displayAutomationResults({
-                totalJobs: data.results.jobs.length,
-                appliedJobs: data.results.jobs.length,
-                applications: data.results.jobs,
-                successRate: 100
-              });
-            } else {
-              jobsListEl.innerHTML = `
-                <div class="automation-summary">
-                  <div class="summary-header">
-                    <h3>Automation Complete</h3>
-                    <p class="timestamp">${new Date().toLocaleString()}</p>
-                  </div>
-                  <div class="no-results">
-                    <i class="fas fa-info-circle"></i>
-                    <p>No matching jobs were found. Please try different search criteria.</p>
-                  </div>
-                </div>
-              `;
-            }
-            
-            resetAutomationUI();
+            handleAutomationComplete(data);
             break;
           case 'error':
             showNotification(data.message, 'error');
@@ -70,6 +102,42 @@ function connectWebSocket(username) {
             break;
         }
     };
+}
+
+function handleAutomationComplete(data) {
+  // Hide loading indicators
+  const loadingBar = document.querySelector('.loading-bar');
+  if (loadingBar) {
+      loadingBar.style.display = 'none';
+  }
+  
+  // Get the jobs list container and clear its content
+  const jobsListEl = document.getElementById('jobs-list');
+  jobsListEl.innerHTML = '';
+  
+  if (data.results && data.results.jobs && data.results.jobs.length > 0) {
+      displayAutomationResults({
+          totalJobs: data.results.jobs.length,
+          appliedJobs: data.results.jobs.length,
+          applications: data.results.jobs,
+          successRate: 100
+      });
+  } else {
+      jobsListEl.innerHTML = `
+          <div class="automation-summary">
+              <div class="summary-header">
+                  <h3>Automation Complete</h3>
+                  <p class="timestamp">${new Date().toLocaleString()}</p>
+              </div>
+              <div class="no-results">
+                  <i class="fas fa-info-circle"></i>
+                  <p>No matching jobs were found. Please try different search criteria.</p>
+              </div>
+          </div>
+      `;
+  }
+  
+  resetAutomationUI();
 }
 
 function updateAutomationStatus(message) {
@@ -121,159 +189,88 @@ function updateStepIndicators(stage) {
     }
 }
 
-// Dashboard section management
-function showDashboardSection(sectionId) {
-    if (sectionId === 'job-search' && !isProfileComplete()) {
-        showProfileCompletionPopup();
-        return;
-    }
-
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.classList.remove('active');
-    });
-    document.querySelector(`[onclick="showDashboardSection('${sectionId}')"]`).classList.add('active');
-
-    document.querySelectorAll('.dashboard-section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    document.getElementById(`${sectionId}-section`).classList.remove('hidden');
-}
-
-function isProfileComplete() {
-    if (window.fetchedProfileData) {
-        const pd = window.fetchedProfileData;
-        if (!pd.full_name || !pd.phone || !pd.job_title_preference || !pd.experience_years || !pd.skills) {
-            return false;
-        }
-        const hasResume = pd.resume_url && pd.resume_url.trim() !== '';
-        const hasConnectedPlatform = pd.linkedin_email && pd.linkedin_password;
-        return hasResume && hasConnectedPlatform;
-    }
-    
-    const requiredFields = [
-        'full-name',
-        'phone',
-        'job-title-preference',
-        'experience-years',
-        'skills'
-    ];
-    
-    const fieldsComplete = requiredFields.every(id => {
-        const element = document.getElementById(id);
-        return element && element.value.trim() !== '';
-    });
-    
-    const hasConnectedPlatform = document.querySelector('.btn-platform.connected') !== null;
-    return fieldsComplete && hasConnectedPlatform;
-}
-
-function showProfileCompletionPopup() {
-    const popup = document.getElementById('profile-completion-popup');
-    popup.classList.remove('hidden');
-    popup.classList.add('show');
-}
-
-function closePopup() {
-    const popup = document.getElementById('profile-completion-popup');
-    popup.classList.remove('show');
-    setTimeout(() => popup.classList.add('hidden'), 300);
-}
-
-function goToProfile() {
-    closePopup();
-    showDashboardSection('profile');
-}
 
 // Job search form handler
+// Job search form handler
 document.getElementById('job-search-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Get user credentials
-    let userEmail = '';
-    let userPassword = '';
-    const storedCredentials = localStorage.getItem('userCredentials');
-    if (storedCredentials) {
-        const userCredentials = JSON.parse(storedCredentials);
-        userEmail = userCredentials.email;
-        userPassword = userCredentials.password;
-    } else {
-        const currentUserStr = localStorage.getItem('currentUser');
-        if (currentUserStr) {
-            const currentUser = JSON.parse(currentUserStr);
-            userEmail = currentUser.username;
-            userPassword = currentUser.password;
-        }
-    }
+  e.preventDefault();
+  
+  // Get user credentials from localStorage
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+      showNotification('Please log in again', 'error');
+      return;
+  }
 
-    const jobTitle = document.getElementById('job-title').value.trim();
-    const location = document.getElementById('location').value.trim();
-    const platform = document.getElementById('platform').value;
-    
-    if (!jobTitle || !location || !platform) {
-        showNotification('Please fill in all required fields', 'error');
-        return;
-    }
+  const jobTitle = document.getElementById('job-title').value.trim();
+  const location = document.getElementById('location').value.trim();
+  const platform = document.getElementById('platform').value;
+  
+  if (!jobTitle || !location || !platform) {
+      showNotification('Please fill in all required fields', 'error');
+      return;
+  }
 
-    const searchButton = e.target.querySelector('button[type="submit"]');
-    const originalButtonText = searchButton.innerHTML;
-    searchButton.disabled = true;
-    searchButton.innerHTML = '<i class="fas fa-robot fa-spin"></i> Starting Automation...';
+  const searchButton = e.target.querySelector('button[type="submit"]');
+  const originalButtonText = searchButton.innerHTML;
+  searchButton.disabled = true;
+  searchButton.innerHTML = '<i class="fas fa-robot fa-spin"></i> Starting Automation...';
 
-    try {
-        document.getElementById('search-results').classList.remove('hidden');
-        document.getElementById('jobs-list').innerHTML = `
-            <div class="automation-progress">
-                <div class="progress-step">
-                    <div class="step-indicator searching active">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <p>Searching Jobs</p>
-                </div>
-                <div class="progress-step">
-                    <div class="step-indicator">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <p>Applying to Jobs</p>
-                </div>
-                <div class="progress-step">
-                    <div class="step-indicator">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <p>Completing Applications</p>
-                </div>
-            </div>
-            <div class="progress-details">
-                <p class="status-message">Initializing automation...</p>
-                <div class="loading-bar"><div class="loading-progress" style="width: 0%"></div></div>
-            </div>
-        `;
+  try {
+      document.getElementById('search-results').classList.remove('hidden');
+      document.getElementById('jobs-list').innerHTML = `
+          <div class="automation-progress">
+              <div class="progress-step">
+                  <div class="step-indicator searching active">
+                      <i class="fas fa-search"></i>
+                  </div>
+                  <p>Searching Jobs</p>
+              </div>
+              <div class="progress-step">
+                  <div class="step-indicator">
+                      <i class="fas fa-robot"></i>
+                  </div>
+                  <p>Applying to Jobs</p>
+              </div>
+              <div class="progress-step">
+                  <div class="step-indicator">
+                      <i class="fas fa-check-circle"></i>
+                  </div>
+                  <p>Completing Applications</p>
+              </div>
+          </div>
+          <div class="progress-details">
+              <p class="status-message">Initializing automation...</p>
+              <div class="loading-bar"><div class="loading-progress" style="width: 0%"></div></div>
+          </div>
+      `;
 
-        // Connect WebSocket before starting automation
-        connectWebSocket(userEmail);
+      // Connect WebSocket before starting automation
+      connectWebSocket(currentUser.username);
 
-        const response = await fetch('http://localhost:8000/apply', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + btoa(userEmail + ":" + userPassword)
-            },
-            body: JSON.stringify({
-                job_title: jobTitle,
-                location: location,
-                applications_limit: 5
-            })
-        });
+      const response = await fetch('http://localhost:8000/apply', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + btoa(currentUser.username + ":" + currentUser.password)
+          },
+          body: JSON.stringify({
+              job_title: jobTitle,
+              location: location,
+              applications_limit: 5
+          })
+      });
 
-        if (!response.ok) {
-            throw new Error(await response.text());
-        }
+      if (!response.ok) {
+          throw new Error(await response.text());
+      }
 
-        showNotification('Job search automation started. Results will appear as jobs are processed.');
+      showNotification('Job search automation started. Results will appear as jobs are processed.');
 
-    } catch (error) {
-        showNotification('Automation failed to start: ' + error.message, 'error');
-        resetAutomationUI();
-    }
+  } catch (error) {
+      showNotification('Automation failed to start: ' + error.message, 'error');
+      resetAutomationUI();
+  }
 });
 
 function resetAutomationUI() {

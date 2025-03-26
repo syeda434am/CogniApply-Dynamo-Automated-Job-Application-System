@@ -284,6 +284,44 @@ async def get_profile(username: str = Depends(get_current_username)):
             break
     
     return profile_data
+
+@app.post("/delete-file")
+async def delete_file(
+    file_type: str = Body(...),
+    username: str = Depends(get_current_username)
+):
+    user_dir = os.path.join(BASE_DIR, username)
+    
+    try:
+        if file_type == 'resume':
+            # Remove both PDF and DOCX versions if they exist
+            for ext in ['pdf', 'docx']:
+                file_path = os.path.join(user_dir, f"resume.{ext}")
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+        elif file_type == 'cover_letter':
+            for ext in ['pdf', 'docx']:
+                file_path = os.path.join(user_dir, f"cover_letter.{ext}")
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid file type")
+        
+        # Update profile.json to remove the file URL
+        profile_file = os.path.join(user_dir, "profile.json")
+        if os.path.exists(profile_file):
+            profile_data = read_json(profile_file)
+            if file_type == 'resume':
+                profile_data.pop('resume_url', None)
+            else:
+                profile_data.pop('cover_letter_url', None)
+            write_json(profile_file, profile_data)
+        
+        return {"message": f"{file_type} deleted successfully"}
+    
+    except Exception as e:
+        logger.error(f"Error deleting {file_type} for {username}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete {file_type}")
     
 # Function to handle the automation process asynchronously
 # Replace the run_automation function in main.py with this version:
